@@ -100,7 +100,6 @@ jobs:
     name: Deploy to Azure VM
     runs-on: ubuntu-latest
     needs: build
-    # ✅ Condition correcte : secrets JAMAIS dans if:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
 
     steps:
@@ -113,14 +112,14 @@ jobs:
           VM_USERNAME: ${{ secrets.VM_USERNAME }}
         run: |
           if [ -z "$VM_HOST" ]; then
-            echo "❌ Secret VM_HOST manquant"
+            echo " Secret VM_HOST manquant"
             exit 1
           fi
           if [ -z "$VM_USERNAME" ]; then
-            echo "❌ Secret VM_USERNAME manquant"
+            echo " Secret VM_USERNAME manquant"
             exit 1
           fi
-          echo "✅ Secrets présents"
+          echo " Secrets présents"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -128,14 +127,29 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
           script: |
-            cd ~/app || git clone https://github.com/${{ github.repository }}.git ~/app && cd ~/app
-            git pull origin master
+            if [ ! -d "$HOME/app" ]; then
+              echo "📦 Clonage du repo..."
+              git clone https://github.com/Dark01213/projet-CI_final_CH.git $HOME/app
+            fi
+
+            cd $HOME/app
+            
+            echo " Mise à jour du code..."
+            git fetch origin
+            git reset --hard origin/master
+
+            echo " Pull des images Docker..."
             docker pull ch2314/app-back:latest
             docker pull ch2314/app-front:latest
+
+            echo " Démarrage des conteneurs..."
             docker-compose -f docker-compose_prod.yml down
             docker-compose -f docker-compose_prod.yml up -d
-            echo "✅ Docker Compose déployé"
+
+            echo " Docker Compose déployé avec succès"
+            docker-compose -f docker-compose_prod.yml ps
 
   # ──────────────────────────────────────────
   # 4) MISE À JOUR KUBERNETES
