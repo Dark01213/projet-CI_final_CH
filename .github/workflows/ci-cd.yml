@@ -175,17 +175,29 @@ jobs:
           timeout: 1m               # ← timeout de connexion SSH
           script: |
 
-            kubectl cluster-info || { echo " kubectl non configuré"; exit 1; }
+              # Ensure kubeconfig is accessible for this user: copy k3s kubeconfig and adjust permissions
+              mkdir -p ~/.kube
+              if [ -r /etc/rancher/k3s/k3s.yaml ]; then
+                sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config || sudo sh -c 'cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config'
+                sudo chown $(id -u):$(id -g) ~/.kube/config
+                sudo chmod 644 ~/.kube/config
+                export KUBECONFIG=~/.kube/config
+              else
+                echo "k3s kubeconfig not readable, will try default KUBECONFIG"
+              fi
 
-            kubectl set image deployment/backend-deployment \
-            backend=ch2314/app-back:latest
-            kubectl set image deployment/frontend-deployment \
-            frontend=ch2314/app-front:latest
+              kubectl version --client || true
+              kubectl cluster-info || { echo " kubectl non configuré"; exit 1; }
 
-            kubectl rollout status deployment/backend-deployment --timeout=3m || \
-            { echo " Backend rollout failed"; kubectl describe deployment/backend-deployment; exit 1; }
+              kubectl set image deployment/backend-deployment \
+              backend=ch2314/app-back:latest
+              kubectl set image deployment/frontend-deployment \
+              frontend=ch2314/app-front:latest
 
-            kubectl rollout status deployment/frontend-deployment --timeout=3m || \
-            { echo " Frontend rollout failed"; kubectl describe deployment/frontend-deployment; exit 1; }
+              kubectl rollout status deployment/backend-deployment --timeout=3m || \
+              { echo " Backend rollout failed"; kubectl describe deployment/backend-deployment; exit 1; }
 
-            echo " Kubernetes mis à jour"
+              kubectl rollout status deployment/frontend-deployment --timeout=3m || \
+              { echo " Frontend rollout failed"; kubectl describe deployment/frontend-deployment; exit 1; }
+
+              echo " Kubernetes mis à jour"
