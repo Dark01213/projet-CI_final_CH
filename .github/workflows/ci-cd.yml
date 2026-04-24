@@ -147,12 +147,11 @@ jobs:
             docker pull ch2314/app-front:latest
 
             echo " Démarrage des conteneurs..."
-            docker-compose -f docker-compose.prod.yml down
-            docker-compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml up -d
 
             echo " Docker Compose déployé avec succès"
-            docker-compose -f docker-compose_prod.yml ps
-
+            docker-compose -f docker-compose.prod.yml ps
   # ──────────────────────────────────────────
   # 4) MISE À JOUR KUBERNETES
   # ──────────────────────────────────────────
