@@ -447,13 +447,49 @@ Développeur → git push
 
 ---
 
-## 📝 Conclusion
+## 🔐 Configuration des Secrets (`.env`)
+
+### Pour vous (développeur local)
+**Fichier `.env` créé** avec tous les paramètres fonctionnels :
+- ✅ **Clé SSH privée** : Configurée pour accès VM Azure
+- ✅ **Identifiants Docker** : Username, password, tokens
+- ✅ **Informations VM** : IP, username, port SSH
+- ✅ **Variables application** : FLASK_ENV, SECRET_KEY
+
+**Ce fichier est JAMAIS commité** (protection `.gitignore`).
+
+### Pour les autres développeurs
+**Fichier `.env.example`** fourni pour montrer la structure :
+```bash
+# Copier le template
+cp .env.example .env
+
+# Remplir avec VOS paramètres personnels
+# - Générer vos clés SSH
+# - Créer vos comptes Docker
+# - Utiliser votre propre VM Azure
+```
+
+### Usage en production
+**GitHub Actions** : Utiliser **GitHub Secrets** au lieu de `.env`
+```bash
+# Dans Repository Settings → Secrets and variables → Actions
+VM_HOST=your-ip
+VM_USERNAME=your-user
+VM_SSH_KEY=your-key
+DOCKER_USERNAME=your-username
+DOCKER_PASSWORD=your-password
+```
+
+---
+
+## 🏁 Conclusion
 
 Le projet **Task Management Application** est une solution **production-ready** complète de :
 - ✅ **Développement** : Code modulaire, bien testé
 - ✅ **Déploiement** : Automatisé et reproductible
 - ✅ **Scalabilité** : Kubernetes et infrastructure cloud
 - ✅ **Qualité** : Tests exhaustifs intégrés
-- ✅ **Sécurité** : Gestion stricte des secrets
+- ✅ **Sécurité** : Gestion stricte des secrets avec `.env` local et GitHub Secrets
 
 Tous les objectifs du cahier des charges sont atteints et dépassés avec les bonus demandés.
