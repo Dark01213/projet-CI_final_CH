@@ -173,20 +173,4 @@ jobs:
           port: 22
           command_timeout: 15m        # ← timeout par commande
           timeout: 1m               # ← timeout de connexion SSH
-          scp_src: kubernetes/
-          scp_dst: ~/kubernetes
-          script: |
-            echo "Fixing k3s permissions and updating deployments..."
-            sudo systemctl stop k3s || true
-            sudo k3s server --write-kubeconfig-mode 644 &
-            sleep 15
-            sudo k3s kubectl cluster-info || { echo "k3s cluster not accessible"; exit 1; }
-            echo "Applying Kubernetes manifests..."
-            sudo k3s kubectl apply -f ~/kubernetes/configmap.yaml
-            sudo k3s kubectl apply -f ~/kubernetes/backend-deployment.yaml
-            sudo k3s kubectl apply -f ~/kubernetes/frontend-deployment.yaml
-            sudo k3s kubectl set image deployment/backend-deployment backend=ch2314/app-back:latest
-            sudo k3s kubectl set image deployment/frontend-deployment frontend=ch2314/app-front:latest
-            sudo k3s kubectl rollout status deployment/backend-deployment --timeout=3m
-            sudo k3s kubectl rollout status deployment/frontend-deployment --timeout=3m
-            echo "Kubernetes updated successfully"
+          script_file: scripts/update-k8s.sh
