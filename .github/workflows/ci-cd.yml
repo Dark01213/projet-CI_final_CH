@@ -130,7 +130,7 @@ jobs:
           port: 22
           script: |
             if [ ! -d "$HOME/app" ]; then
-              echo "📦 Clonage du repo..."
+              echo " Clonage du repo..."
               git clone https://github.com/Dark01213/projet-CI_final_CH.git $HOME/app
             fi
 
@@ -163,18 +163,28 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Update Kubernetes via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          command_timeout: 5m        # ← timeout par commande
+          timeout: 30s               # ← timeout de connexion SSH
           script: |
+
+            kubectl cluster-info || { echo " kubectl non configuré"; exit 1; }
+
             kubectl set image deployment/backend-deployment \
-              backend=ch2314/app-back:latest
+            backend=ch2314/app-back:latest
             kubectl set image deployment/frontend-deployment \
-              frontend=ch2314/app-front:latest
-            kubectl rollout status deployment/backend-deployment
-            kubectl rollout status deployment/frontend-deployment
-            echo "✅ Kubernetes mis à jour"
+            frontend=ch2314/app-front:latest
+
+            kubectl rollout status deployment/backend-deployment --timeout=3m || \
+            { echo " Backend rollout failed"; kubectl describe deployment/backend-deployment; exit 1; }
+
+            kubectl rollout status deployment/frontend-deployment --timeout=3m || \
+            { echo " Frontend rollout failed"; kubectl describe deployment/frontend-deployment; exit 1; }
+
+            echo " Kubernetes mis à jour"
