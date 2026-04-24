@@ -32,9 +32,46 @@ jobs:
           pip install -r backend/requirements.txt
       
       - name: Run backend tests
+        id: pytest
         run: |
           cd backend
-          pytest test_app.py -v --cov=. --cov-report=xml
+          pip install pytest-html pytest-json-report
+          pytest test_app.py -v --junit-xml=test-results.xml --html=test-report.html --self-contained-html --cov=. --cov-report=xml 2>&1 | tee pytest-output.txt
+        continue-on-error: true
+      
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            backend/test-results.xml
+            backend/test-report.html
+            backend/pytest-output.txt
+            backend/coverage.xml
+          retention-days: 30
+      
+      - name: Publish test results to PR
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: backend/test-results.xml
+          check_name: "Backend Unit Tests Results"
+      
+      - name: Comment test results on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('backend/pytest-output.txt', 'utf8');
+            const comment = `### 🧪 Test Results\n\n\`\`\`\n${output}\n\`\`\``;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
       
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
