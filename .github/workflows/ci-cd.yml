@@ -153,7 +153,7 @@ jobs:
             echo " Docker Compose déployé avec succès"
             docker-compose -f docker-compose.prod.yml ps
   # ──────────────────────────────────────────
-  # 4) MISE À JOUR KUBERNETES
+  # 4) MISE À JOUR KUBERNETESaez
   # ──────────────────────────────────────────
   kubernetes:
     name: Update Kubernetes
