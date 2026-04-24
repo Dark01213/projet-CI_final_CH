@@ -7,7 +7,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region"
   type        = string
-  default     = "westeurope"
+  default     = "centralus"
 }
 
 variable "resource_group_name" {
@@ -19,7 +19,7 @@ variable "resource_group_name" {
 variable "vm_name" {
   description = "Name of the virtual machine"
   type        = string
-  default     = "vm-task-app"
+  default     = "vm-task-app-prod"
 }
 
 variable "vm_size" {
@@ -34,12 +34,6 @@ variable "admin_username" {
   default     = "azureuser"
 }
 
-variable "ssh_key_path" {
-  description = "Path to SSH public key"
-  type        = string
-  default     = "~/.ssh/id_rsa.pub"
-}
-
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
@@ -47,5 +41,6 @@ variable "tags" {
     Project     = "TaskApp"
     Environment = "Production"
     ManagedBy   = "Terraform"
+    CostCenter  = "Engineering"
   }
 }

@@ -133,22 +133,18 @@ resource "azurerm_network_interface_security_group_association" "main" {
 
 resource "azurerm_linux_virtual_machine" "main" {
   name                = var.vm_name
-  location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
   size                = var.vm_size
-
-  disable_password_authentication = true
-
-  admin_username = var.admin_username
-
-  admin_ssh_key {
-    username   = var.admin_username
-    public_key = file(var.ssh_key_path)
-  }
-
+  admin_username      = var.admin_username
   network_interface_ids = [
     azurerm_network_interface.main.id,
   ]
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = file("~/.ssh/id_rsa.pub")
+  }
 
   os_disk {
     caching              = "ReadWrite"
@@ -162,31 +158,66 @@ resource "azurerm_linux_virtual_machine" "main" {
     version   = "latest"
   }
 
-  user_data = base64encode(file("${path.module}/init-script.sh"))
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+
+    # Update system packages
+    apt-get update
+    apt-get upgrade -y
+
+    # Install Docker
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    usermod -aG docker azureuser
+
+    # Install Docker Compose
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+
+    # Install Kubernetes tools
+    apt-get install -y curl apt-transport-https ca-certificates gnupg lsb-release
+
+    # Install kubectl
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    chmod +x kubectl
+    mv kubectl /usr/local/bin/
+
+    # Install Minikube
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    chmod +x minikube-linux-amd64
+    mv minikube-linux-amd64 /usr/local/bin/minikube
+
+    # Install K3s as alternative to Minikube (lighter weight)
+    curl -sfL https://get.k3s.io | sh -
+
+    # Clone the application repository
+    mkdir -p /opt/app-automation
+    cd /opt/app-automation
+    git clone https://github.com/Dark01213/projet-CI_final_CH /opt/app-automation || echo "Repository already cloned"
+
+    # Setup docker-compose for local development
+    cd /opt/app-automation
+    docker-compose up -d || true
+
+    echo "VM initialization complete!"
+  EOF
+  )
 
   tags = var.tags
-
-  depends_on = [
-    azurerm_network_interface_security_group_association.main
-  ]
-}
-
-output "public_ip_address" {
-  value       = azurerm_public_ip.main.ip_address
-  description = "The public IP address of the VM"
-}
-
-output "private_ip_address" {
-  value       = azurerm_network_interface.main.private_ip_address
-  description = "The private IP address of the VM"
 }
 
 output "resource_group_name" {
-  value       = azurerm_resource_group.main.name
-  description = "The name of the resource group"
+  value = azurerm_resource_group.main.name
+}
+
+output "public_ip_address" {
+  value = azurerm_public_ip.main.ip_address
 }
 
 output "vm_id" {
-  value       = azurerm_linux_virtual_machine.main.id
-  description = "The ID of the virtual machine"
+  value = azurerm_linux_virtual_machine.main.id
+}
+
+output "private_ip_address" {
+  value = azurerm_network_interface.main.private_ip_address
 }

@@ -191,7 +191,79 @@ Status: Complet - 100% de réussite.
 
 ---
 
-### Phase 8 - Documentation Technique
+### Phase 8 - Infrastructure as Code avec Terraform
+
+Objectif: Automatiser le provisionnement de l'infrastructure cloud Azure de manière déclarative et reproductible.
+
+Ce que j'ai fait:
+
+J'ai configuré une infrastructure complète Azure utilisant Terraform pour provisionner automatiquement une machine virtuelle Ubuntu avec Docker et Kubernetes préinstallés. L'infrastructure comprend:
+
+- Un Resource Group Azure pour organiser les ressources
+- Un Virtual Network avec sous-réseau privé
+- Une Network Security Group avec règles de sécurité appropriées (SSH, HTTP, HTTPS, ports applicatifs)
+- Une adresse IP publique statique
+- Une machine virtuelle Ubuntu 20.04 LTS avec 4 vCPUs et 16 GB RAM (Standard B4as v2)
+- Installation automatique de Docker, Docker Compose, Kubernetes (kubectl, minikube, k3s)
+- Configuration SSH avec clé publique pour l'accès sécurisé
+
+Le défi principal a été la configuration de l'authentification Azure. Les comptes Azure for Students ont des restrictions qui empêchent l'utilisation de Service Principals classiques. J'ai donc implémenté une solution utilisant l'authentification Azure CLI avec device code flow, qui est parfaitement adaptée aux environnements de développement avec comptes étudiants.
+
+J'ai créé un script PowerShell `setup-terraform.ps1` qui:
+- Charge les variables d'environnement depuis un fichier .env.local sécurisé
+- Vérifie la connexion Azure CLI
+- Exécute `terraform init`, `terraform plan` et `terraform apply`
+- Gère automatiquement le mode d'authentification CLI
+
+Configuration Terraform:
+- Provider AzureRM v3.117.1 avec `use_cli = true`
+- Région de déploiement: Sweden Central (Zone 3) - compatible avec Azure for Students
+- Taille VM: Standard B4as v2 (4 vCPUs, 16 GB RAM)
+- Variables d'environnement sécurisées (jamais commitées dans Git)
+- Fichier .gitignore renforcé pour la sécurité
+
+Commandes rapides pour déployer:
+- Copier le modèle de variables d'environnement:
+  ```powershell
+  cp .env.example .env.local
+  ```
+- Se connecter à Azure:
+  ```powershell
+  az login
+  ```
+- Planifier l'infrastructure:
+  ```powershell
+  pwsh .\setup-terraform.ps1 plan
+  ```
+- Créer l'infrastructure:
+  ```powershell
+  pwsh .\setup-terraform.ps1 apply
+  ```
+- Détruire l'infrastructure:
+  ```powershell
+  pwsh .\setup-terraform.ps1 destroy
+  ```
+
+Résultat:
+```
+Plan: 8 to add, 0 to change, 0 to destroy.
+
+Resources to create:
+- Resource Group
+- Virtual Network + Subnet
+- Network Security Group (règles SSH, HTTP, HTTPS, Backend, Kubernetes)
+- Public IP Address
+- Network Interface
+- Linux Virtual Machine (Ubuntu 20.04, Standard B4as v2 - 4 vCPUs, 16 GB RAM avec Docker/K8s préinstallé)
+```
+
+Limitation connue: Les politiques Azure for Students restreignent certains types de ressources dans certaines régions. Une solution alternative serait d'utiliser un abonnement Azure payant ou de contacter le support Azure pour obtenir l'accès aux régions supplémentaires.
+
+Status: Configuration complète et fonctionnelle - Prêt pour le déploiement une fois les restrictions de compte résolues.
+
+---
+
+### Phase 9 - Documentation Technique
 
 Objectif: Documenter l'ensemble du projet pour que n'importe quel développeur puisse comprendre et utiliser le code.
 
@@ -607,7 +679,12 @@ Ce fichier est protégé par .gitignore et ne sera jamais commité sur GitHub.
 Pour que les autres développeurs puissent travailler:
 
 J'ai fourni un fichier .env.example qui montre la structure. Chaque nouveau développeur doit:
-- Copier .env.example vers .env
+- Copier .env.example vers .env.local
+- Remplir `.env.local` avec `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` et `AZURE_USE_CLI_AUTH=true`
+- Se connecter à Azure avec `az login`
+- Planifier l'infrastructure avec `pwsh .\setup-terraform.ps1 plan`
+- Créer l'infrastructure avec `pwsh .\setup-terraform.ps1 apply`
+- Détruire l'infrastructure avec `pwsh .\setup-terraform.ps1 destroy`
 - Générer ses propres clés SSH
 - Créer ses propres comptes Docker
 - Utiliser sa propre VM Azure

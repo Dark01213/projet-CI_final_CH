@@ -1,7 +1,7 @@
 environment = "production"
-location    = "westeurope"
+location    = "swedencentral"
 
-vm_size     = "Standard_B2s"
+vm_size     = "Standard_B2s_v2"
 vm_name     = "vm-task-app-prod"
 
 admin_username = "azureuser"
