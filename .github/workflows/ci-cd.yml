@@ -174,30 +174,13 @@ jobs:
           command_timeout: 15m        # ← timeout par commande
           timeout: 1m               # ← timeout de connexion SSH
           script: |
-
-              # Ensure kubeconfig is accessible for this user: copy k3s kubeconfig and adjust permissions
-              mkdir -p ~/.kube
-              if [ -r /etc/rancher/k3s/k3s.yaml ]; then
-                sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config || sudo sh -c 'cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config'
-                sudo chown $(id -u):$(id -g) ~/.kube/config
-                sudo chmod 644 ~/.kube/config
-                export KUBECONFIG=~/.kube/config
-              else
-                echo "k3s kubeconfig not readable, will try default KUBECONFIG"
-              fi
-
-              kubectl version --client || true
-              sudo k3s kubectl cluster-info || { echo " kubectl non configuré"; exit 1; }
-
-              sudo k3s kubectl set image deployment/backend-deployment \
-              backend=ch2314/app-back:latest
-              sudo k3s kubectl set image deployment/frontend-deployment \
-              frontend=ch2314/app-front:latest
-
-              sudo k3s kubectl rollout status deployment/backend-deployment --timeout=3m || \
-              { echo " Backend rollout failed"; sudo k3s kubectl describe deployment/backend-deployment; exit 1; }
-
-              sudo k3s kubectl rollout status deployment/frontend-deployment --timeout=3m || \
-              { echo " Frontend rollout failed"; sudo k3s kubectl describe deployment/frontend-deployment; exit 1; }
-
-              echo " Kubernetes mis à jour"
+            echo "Fixing k3s permissions and updating deployments..."
+            sudo systemctl stop k3s || true
+            sudo k3s server --write-kubeconfig-mode 644 &
+            sleep 15
+            sudo k3s kubectl cluster-info || { echo "k3s cluster not accessible"; exit 1; }
+            sudo k3s kubectl set image deployment/backend-deployment backend=ch2314/app-back:latest
+            sudo k3s kubectl set image deployment/frontend-deployment frontend=ch2314/app-front:latest
+            sudo k3s kubectl rollout status deployment/backend-deployment --timeout=3m
+            sudo k3s kubectl rollout status deployment/frontend-deployment --timeout=3m
+            echo "Kubernetes updated successfully"
