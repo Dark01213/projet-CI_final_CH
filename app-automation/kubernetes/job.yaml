@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  namespace: default
+  labels:
+    app: task-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate
+        image: localhost:5000/task-backend:latest
+        imagePullPolicy: IfNotPresent
+        command: ["python", "-m", "pytest", "test_app.py", "-v"]
+        env:
+        - name: FLASK_APP
+          value: app.py
+      restartPolicy: Never
+  backoffLimit: 3

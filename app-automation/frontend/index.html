@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Task Management</h1>
+            <div class="header-info" id="header-info">Loading...</div>
+        </header>
+
+        <div class="health-status" id="health-status">
+            <span class="status-indicator" id="status-indicator"></span>
+            <span id="status-text">Checking health...</span>
+        </div>
+
+        <main>
+            <section class="create-task">
+                <h2>Add New Task</h2>
+                <form id="task-form">
+                    <input 
+                        type="text" 
+                        id="task-title" 
+                        placeholder="Task title..."
+                        required
+                    >
+                    <input 
+                        type="text" 
+                        id="task-description" 
+                        placeholder="Task description (optional)..."
+                    >
+                    <button type="submit" class="btn-primary">Add Task</button>
+                </form>
+            </section>
+
+            <section class="tasks-section">
+                <h2>Tasks <span id="task-count">(0)</span></h2>
+                <div id="tasks-container" class="tasks-container">
+                    <p class="empty-message">No tasks yet. Create one to get started!</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Task Management Application - Fullstack Demo</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
