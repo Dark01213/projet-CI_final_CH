@@ -187,17 +187,17 @@ jobs:
               fi
 
               kubectl version --client || true
-              kubectl cluster-info || { echo " kubectl non configuré"; exit 1; }
+              sudo k3s kubectl cluster-info || { echo " kubectl non configuré"; exit 1; }
 
-              kubectl set image deployment/backend-deployment \
+              sudo k3s kubectl set image deployment/backend-deployment \
               backend=ch2314/app-back:latest
-              kubectl set image deployment/frontend-deployment \
+              sudo k3s kubectl set image deployment/frontend-deployment \
               frontend=ch2314/app-front:latest
 
-              kubectl rollout status deployment/backend-deployment --timeout=3m || \
-              { echo " Backend rollout failed"; kubectl describe deployment/backend-deployment; exit 1; }
+              sudo k3s kubectl rollout status deployment/backend-deployment --timeout=3m || \
+              { echo " Backend rollout failed"; sudo k3s kubectl describe deployment/backend-deployment; exit 1; }
 
-              kubectl rollout status deployment/frontend-deployment --timeout=3m || \
-              { echo " Frontend rollout failed"; kubectl describe deployment/frontend-deployment; exit 1; }
+              sudo k3s kubectl rollout status deployment/frontend-deployment --timeout=3m || \
+              { echo " Frontend rollout failed"; sudo k3s kubectl describe deployment/frontend-deployment; exit 1; }
 
               echo " Kubernetes mis à jour"
