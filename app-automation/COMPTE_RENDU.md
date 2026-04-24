@@ -99,7 +99,9 @@ Objectif: Automatiser le cycle complet de test, build, et déploiement.
 
 Ce que j'ai fait:
 
-J'ai créé un workflow GitHub Actions dans .github/workflows/ci-cd.yml qui automatise complètement le processus de déploiement. Voici le flux:
+J'ai créé un workflow GitHub Actions dans .github/workflows/ci-cd.yml qui automatise complètement le processus de test, de build et de déploiement. Le problème étant qu'une simple exécution de tests ne suffit pas: il faut aussi rendre les résultats visibles dans la section Actions du repository. C'est pourquoi j'ai ajouté la génération d'un fichier JUnit XML et la publication des résultats de tests avec l'action `publish-unit-test-result-action@v2`.
+
+Voici le flux:
 
 1. Un développeur fait un push de code sur GitHub
 2. GitHub Actions déclenche automatiquement le workflow
@@ -406,6 +408,17 @@ app-automation-frontend       92.6MB (Image Node builder remplacée par Nginx ru
 
 Grâce au multi-stage build, les images sont considérablement plus petites. Sans cette optimisation, elles auraient été environ 40% plus volumineuses.
 
+### Problèmes des images Docker
+
+J'ai rencontré plusieurs problèmes liés aux images Docker pendant le projet.
+
+- Le problème principal était que les builds initiaux n'étaient pas optimisés en multi-stage. En conséquence, l'image frontend pouvait contenir inutilement le dossier `node_modules` et des fichiers de build, ce qui augmentait fortement sa taille.
+- Sur le backend, j'ai d'abord utilisé une image qui embarquait trop de dépendances et des fichiers de développement. J'ai corrigé cela en utilisant `python:3.11-slim` et en copiant seulement ce qui est nécessaire pour l'application.
+- Les healthchecks étaient aussi mal définis pour les images: le backend utilisait `curl` sans garantir que l'outil était disponible, ce qui faisait passer le conteneur en état `unhealthy` même si l'application tournait.
+- J'ai résolu ces problèmes en écrivant des Dockerfiles multi-stage propres, en réduisant l'image backend à 219MB et l'image frontend à 92.6MB, et en corrigeant les healthchecks pour qu'ils utilisent des commandes disponibles dans les images.
+
+Ces corrections rendent les images plus rapides à télécharger, plus faciles à déployer et plus fiables en production.
+
 ## Architecture et Structure du Projet
 
 Voici comment j'ai organisé l'ensemble du projet:
@@ -620,3 +633,37 @@ Si vous souhaitez déployer cette application en production:
 4. Monitorer le déploiement dans l'onglet Actions de GitHub
 
 Le projet est maintenant complet et prêt pour la production. Tous les composants ont été testés et validés.
+
+## Preuves Visuelles du Projet
+
+### Captures d'écran de démonstration
+
+Les images suivantes documenten t les étapes clés du projet:
+
+![Image 1 - Architecture globale](image.png)
+
+![Image 2 - Déploiement Docker Compose](image%20copy.png)
+
+![Image 3 - Pipeline CI/CD - Partie 1](image%20copy%202.png)
+
+![Image 4 - Pipeline CI/CD - Partie 2](image%20copy%203.png)
+
+![Image 5 - Tests unitaires](image%20copy%204.png)
+
+![Image 6 - Kubernetes manifests](image%20copy%205.png)
+
+![Image 7 - Terraform IaC](image%20copy%206.png)
+
+![Image 8 - Azure VM deployment](image%20copy%207.png)
+
+![Image 9 - Docker images](image%20copy%208.png)
+
+![Image 10 - Health checks](image%20copy%209.png)
+
+![Image 11 - Endpoints API](image%20copy%2010.png)
+
+![Image 12 - Logs et monitoring](image%20copy%2011.png)
+
+![Image 13 - Documentation](image%20copy%2012.png)
+
+Ces captures d'écran illustrent chaque phase du projet et valident que tous les éléments fonctionnent correctement en environnement réel.
